@@ -1,0 +1,47 @@
+﻿#include "Common.ush"
+
+
+float4 SeparateTranslucencyBilinearUVMinMax;
+
+
+Texture2D SceneColor;
+SamplerState SceneColorSampler;
+
+Texture2D SeparateTranslucency;
+SamplerState SeparateTranslucencySampler;
+
+Texture2D SeparateModulation;
+SamplerState SeparateModulationSampler;
+
+Texture2D<uint2> CustomStencilTexture;
+
+void MainPS(
+	float4 SvPosition : SV_Position,
+	out float4 OutColor : SV_Target0)
+{
+	float2 BufferUV = SvPosition.xy * View.BufferSizeAndInvSize.zw;
+	
+	float4 SceneColorSample = SceneColor.SampleLevel(SceneColorSampler, BufferUV, 0);
+
+
+	float2 SeparateTranslucencyBufferUV = clamp(BufferUV, SeparateTranslucencyBilinearUVMinMax.xy, SeparateTranslucencyBilinearUVMinMax.zw);
+
+
+	float4 SeparateTranslucencySample = SeparateTranslucency.SampleLevel(SeparateTranslucencySampler, SeparateTranslucencyBufferUV, 0);
+	float4 SeparateModulationSample = SeparateModulation.SampleLevel(SeparateModulationSampler, SeparateTranslucencyBufferUV, 0);
+
+	/*SceneColorSample = SceneColor.Load(int3(SvPosition.xy, 0));
+	SeparateTranslucencySample = SeparateTranslucency.Load(int3(SvPosition.xy, 0));*/
+	uint CustomStencil = CustomStencilTexture.Load(int3(SvPosition.xy, 0)) STENCIL_COMPONENT_SWIZZLE;
+
+	if(CustomStencil == 111 && SeparateTranslucencySample.a != 1)
+		OutColor.rgb = SceneColorSample.rgb * SeparateTranslucencySample.a * SeparateModulationSample.rgb + SeparateTranslucencySample.rgb;
+	else
+		OutColor.rgb = SceneColorSample.rgb;
+	/*if(CustomStencil == 111 && SeparateTranslucencySample.a != 1)
+		OutColor.rgb = SceneColorSample.rgb * SeparateTranslucencySample.a +  SeparateTranslucencySample.rgb*(1 - SeparateTranslucencySample.a);
+	else
+		OutColor.rgb = SceneColorSample.rgb;*/
+	
+	
+}

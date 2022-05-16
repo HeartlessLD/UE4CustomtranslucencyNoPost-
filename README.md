@@ -17,6 +17,7 @@ Separate Translucency  enable
 将想要设置不受影响的物体  属性 RenderCustomDepthPass enable
 customDepth Stencil Value   111  (这里设置111 是针对后期材质中 只针对111 进行处理 非111的透明材质 保持原样)
 透明材质要开启 Allow Custom Depth Write
+
 这里面说一下大概思路（可能有错误 仅供参考）
 文件中所有///>nopost的地方都是修改的内容
 首先自定义一条Pass 放在后期的最后进行渲染，
